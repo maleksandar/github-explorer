@@ -18,13 +18,13 @@
           v-model="model"
           :items="items"
           :loading="isLoading"
-          :search-input.sync="search"
+          :search-input.sync="searchTerm"
           color="white"
           hide-no-data
           hide-selected
           item-text="Description"
           item-value="API"
-          label="Public APIs"
+          label="Github repos"
           placeholder="Start typing to Search"
           prepend-icon="mdi-database-search"
           return-object
@@ -55,60 +55,65 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
+
+import { Vue, Component, Watch } from 'vue-property-decorator';
 
 @Component
 export default class HelloWorld extends Vue {
     descriptionLimit = 60;
-    entries:{ Description: string }[] = [];
-    isLoading = false;
-    model: { [key: string]: string } | null = null;
-    count = 0;
-    search = '';
 
-    get fields() : { key: string, value: string }[] {
+    entries: { Description: string }[] = [];
+
+    isLoading = false;
+
+    model: { [key: string]: string } | null = null;
+
+    count = 0;
+
+    searchTerm = '';
+
+    get fields(): { key: string; value: string }[] {
       if (!this.model) return [];
 
-      return Object.keys(this.model).map(key => ({
-          key,
-          value: (this.model? this.model[key] : null )|| 'n/a'
-        }))
-    };
-
+      return Object.keys(this.model).map((key) => ({
+        key,
+        value: (this.model ? this.model[key] : null) || 'n/a',
+      }));
+    }
 
     get items(): { Description: string }[] {
-        return this.entries.map(entry => {
-          const Description = entry.Description.length > this.descriptionLimit
-            ? entry.Description.slice(0, this.descriptionLimit) + '...'
-            : entry.Description
+      return this.entries.map((entry) => {
+        const Description = entry.Description.length > this.descriptionLimit
+          ? `${entry.Description.slice(0, this.descriptionLimit)}'...'`
+          : entry.Description;
 
-          return Object.assign({}, entry, { Description })
-        })
+        return { ...entry, Description };
+      });
     }
 
-    @Watch('search')
-    executeSearch(val: string) {
-        // Items have already been loaded
-      if (this.items.length > 0) return
+    @Watch('searchTerm')
+    search(val: string) {
+      // Items have already been loaded
+      if (this.items.length > 0) return;
 
       // Items have already been requested
-      if (this.isLoading) return
+      if (this.isLoading) return;
 
-      this.isLoading = true
+      this.isLoading = true;
 
       // Lazily load input items
-      fetch('https://api.publicapis.org/entries')
-        .then(res => res.json())
-        .then(res => {
-          const { count, entries } = res
-          this.count = count
-          this.entries = entries
+      fetch(`https://api.github.com/search/repositories?q=${val}`)
+        .then((res) => res.json())
+        .then((res) => {
+          const { count, entries } = res;
+          this.count = count;
+          this.entries = entries;
         })
-        .catch(err => {
-          console.log(err)
+        .catch((err) => {
+          console.log(err);
         })
-        .finally(() => (this.isLoading = false))
+        .finally(() => { this.isLoading = false; });
     }
-};
+}
 
 </script>
