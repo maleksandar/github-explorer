@@ -1,9 +1,8 @@
 <template>
   <v-app>
-    <v-app-bar
+    <!-- <v-app-bar
       app
-      color="primary"
-      dark
+      color="#30BCED"
     >
       <div class="d-flex align-center">
         <div id="nav">
@@ -11,7 +10,7 @@
           <router-link to="/about">About</router-link>
         </div>
       </div>
-    </v-app-bar>
+    </v-app-bar> -->
     <v-main>
       <router-view/>
     </v-main>

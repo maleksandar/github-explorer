@@ -1,22 +1,13 @@
 <template>
-  <v-container>
-    <v-card color="red lighten-2" dark>
-      <v-card-title class="headline red lighten-3">
-        Search for Public APIs
+  <v-container id="github-explorer">
+    <v-card class="container" dark>
+      <v-card-title class="header">
+        Search for Github repositories
       </v-card-title>
-      <v-card-text>
-        Explore hundreds of free API's ready for consumption! For more information visit
-        <a
-          class="grey--text text--lighten-3"
-          href="https://github.com/toddmotto/public-apis"
-          target="_blank"
-          >the Github repository</a
-        >.
-      </v-card-text>
       <v-card-text>
         <v-autocomplete
           v-model="model"
-          :items="items"
+          :items="repositoryNames"
           :loading="isLoading"
           :search-input.sync="searchTerm"
           color="white"
@@ -32,8 +23,8 @@
       </v-card-text>
       <v-divider></v-divider>
       <v-expand-transition>
-        <v-list v-if="model" class="red lighten-3">
-          <v-list-item v-for="(field, i) in fields" :key="i">
+        <v-list v-if="model" class="props">
+          <v-list-item v-for="(field, i) in repoProps" :key="i">
             <v-list-item-content>
               <v-list-item-title v-text="field.value"></v-list-item-title>
               <v-list-item-subtitle v-text="field.key"></v-list-item-subtitle>
@@ -55,59 +46,61 @@
 </template>
 
 <script lang="ts">
-
 import { Vue, Component, Watch } from 'vue-property-decorator';
+import { repositoriesResponse } from './mock-data';
+import { RepositoryShortInfo, RepositoryShortInfoKeys } from './GithubExplorer.models';
+
+function mockGetGithubData(val: string): Promise<any> {
+  return new Promise((resolve: Function) => {
+    setTimeout(resolve(repositoriesResponse));
+  });
+}
+
+function getGithubData(val: string) {
+  return fetch(`https://api.github.com/search/repositories?q=${val}`)
+    .then((res) => res.json());
+}
 
 @Component
-export default class HelloWorld extends Vue {
+export default class GithubExplorerComponent extends Vue {
     descriptionLimit = 60;
 
-    entries: { Description: string }[] = [];
+    repositories: RepositoryShortInfo[] = [];
 
     isLoading = false;
 
-    model: { [key: string]: string } | null = null;
+    model = '';
 
     count = 0;
 
     searchTerm = '';
 
-    get fields(): { key: string; value: string }[] {
-      if (!this.model) return [];
+    get repoProps(): { key: string; value: string | object }[] {
+      const entry = this.repositories.find((x) => x.full_name === this.model);
 
-      return Object.keys(this.model).map((key) => ({
-        key,
-        value: (this.model ? this.model[key] : null) || 'n/a',
-      }));
+      return RepositoryShortInfoKeys
+        .map((key) => ({
+          key,
+          value: (entry ? (entry as any)[key] : null),
+        }));
     }
 
-    get items(): { Description: string }[] {
-      return this.entries.map((entry) => {
-        const Description = entry.Description.length > this.descriptionLimit
-          ? `${entry.Description.slice(0, this.descriptionLimit)}'...'`
-          : entry.Description;
-
-        return { ...entry, Description };
-      });
+    get repositoryNames(): string[] {
+      return this.repositories.map((x) => x.full_name);
     }
 
     @Watch('searchTerm')
     search(val: string) {
-      // Items have already been loaded
-      if (this.items.length > 0) return;
-
       // Items have already been requested
       if (this.isLoading) return;
 
       this.isLoading = true;
 
       // Lazily load input items
-      fetch(`https://api.github.com/search/repositories?q=${val}`)
-        .then((res) => res.json())
+      mockGetGithubData(val)
         .then((res) => {
-          const { count, entries } = res;
-          this.count = count;
-          this.entries = entries;
+          this.count = res.total_count;
+          this.repositories = res.items;
         })
         .catch((err) => {
           console.log(err);
@@ -115,5 +108,21 @@ export default class HelloWorld extends Vue {
         .finally(() => { this.isLoading = false; });
     }
 }
-
 </script>
+
+<style scoped lang="scss">
+  #github-explorer {
+    .container {
+      background-color: #30BCED;
+      color: #FFFAFF;
+
+      .header {
+        background-color: #30BCED
+      }
+
+      .props {
+        background-color: #303036;
+      }
+    }
+  }
+</style>
