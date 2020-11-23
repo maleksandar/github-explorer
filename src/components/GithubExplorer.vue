@@ -22,14 +22,30 @@
         ></v-autocomplete>
       </v-card-text>
       <div class="pa-2">
-        <v-select
-            v-model="reposityInfoKeysSelection"
-            :items="availableRepositoryInfoKeys"
-            chips
-            label="Chips"
-            multiple
-            solo
-          ></v-select>
+        <v-expansion-panels color="grey darken-3">
+
+        <v-expansion-panel>
+          <v-expansion-panel-header>
+            <v-row no-gutters>
+              Edit
+            </v-row>
+          </v-expansion-panel-header>
+          <v-expansion-panel-content>
+          Fields:
+          <v-select
+              deletable-chips
+              @click="selectionClicked($event)"
+              v-model="reposityInfoKeysSelection"
+              :items="availableRepositoryInfoKeys"
+              chips
+              label="Chips"
+              multiple
+              solo
+            ></v-select>
+          </v-expansion-panel-content>
+        </v-expansion-panel>
+        </v-expansion-panels>
+
       </div>
       <div class="pa-2">
         <v-expand-transition>
@@ -112,6 +128,10 @@ export default class GithubExplorerComponent extends Vue {
 
     get repositoryNames(): string[] {
       return this.repositories.map((x) => x.full_name);
+    }
+
+    selectionClicked($event: MouseEvent) {
+      console.log('Selection clicked, ', $event, this);
     }
 
     @Watch('searchTerm')
