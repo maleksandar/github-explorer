@@ -21,18 +21,35 @@
           return-object
         ></v-autocomplete>
       </v-card-text>
-      <v-divider></v-divider>
-      <v-expand-transition>
-        <v-list v-if="model" class="props">
-          <v-list-item v-for="(field, i) in repoProps" :key="i">
-            <v-list-item-content>
-              <v-list-item-title v-text="field.value"></v-list-item-title>
-              <v-list-item-subtitle v-text="field.key"></v-list-item-subtitle>
-            </v-list-item-content>
-          </v-list-item>
-        </v-list>
-      </v-expand-transition>
-      <v-card-actions>
+      <div class="pa-2">
+        <v-select
+            v-model="reposityInfoKeysSelection"
+            :items="availableRepositoryInfoKeys"
+            chips
+            label="Chips"
+            multiple
+            solo
+          ></v-select>
+      </div>
+      <div class="pa-2">
+        <v-expand-transition>
+          <v-list v-if="model" color="grey darken-3">
+            <v-list-item v-for="(field, i) in repoProps" :key="i">
+              <v-list-item-content>
+                <v-list-item-title v-text="field.value"></v-list-item-title>
+                <v-list-item-subtitle v-text="field.key"></v-list-item-subtitle>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-expand-transition>
+      </div>
+      <v-card-actions v-if="!!model">
+        <v-btn :disabled="!model" color="grey darken-3" @click="openRepositoryDetails(model)">
+          Details
+          <v-icon right>
+            mdi-information-outline
+          </v-icon>
+        </v-btn>
         <v-spacer></v-spacer>
         <v-btn :disabled="!model" color="grey darken-3" @click="model = null">
           Clear
@@ -48,7 +65,7 @@
 <script lang="ts">
 import { Vue, Component, Watch } from 'vue-property-decorator';
 import { repositoriesResponse } from './mock-data';
-import { RepositoryShortInfo, RepositoryShortInfoKeys } from './GithubExplorer.models';
+import { RepositoryShortInfo, DefaultRepositoryShortInfoKeys } from './GithubExplorer.models';
 
 function mockGetGithubData(val: string): Promise<any> {
   return new Promise((resolve: Function) => {
@@ -75,10 +92,18 @@ export default class GithubExplorerComponent extends Vue {
 
     searchTerm = '';
 
+    reposityInfoKeysSelection = DefaultRepositoryShortInfoKeys;
+
+    availableRepositoryInfoKeys = DefaultRepositoryShortInfoKeys;
+
     get repoProps(): { key: string; value: string | object }[] {
       const entry = this.repositories.find((x) => x.full_name === this.model);
 
-      return RepositoryShortInfoKeys
+      this.availableRepositoryInfoKeys = entry
+        ? Object.keys(entry)
+        : DefaultRepositoryShortInfoKeys;
+
+      return this.reposityInfoKeysSelection
         .map((key) => ({
           key,
           value: (entry ? (entry as any)[key] : null),
@@ -107,6 +132,10 @@ export default class GithubExplorerComponent extends Vue {
         })
         .finally(() => { this.isLoading = false; });
     }
+
+    openRepositoryDetails(repositoryName: string) {
+      this.$router.push({ name: 'repo-details', params: { repoFullName: this.model } });
+    }
 }
 </script>
 
@@ -120,7 +149,7 @@ export default class GithubExplorerComponent extends Vue {
         background-color: #30BCED
       }
 
-      .props {
+      .repository-properties {
         background-color: #303036;
       }
     }

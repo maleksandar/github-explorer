@@ -6,7 +6,7 @@ export interface RepositoryShortInfo {
   open_issues: number;
 }
 
-export const RepositoryShortInfoKeys = [
+export const DefaultRepositoryShortInfoKeys = [
   'name',
   'full_name',
   'private',
