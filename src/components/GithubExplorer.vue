@@ -33,11 +33,10 @@
           <v-expansion-panel-content>
           Fields:
           <v-select
-              deletable-chips
-              @click="selectionClicked($event)"
               v-model="reposityInfoKeysSelection"
               :items="availableRepositoryInfoKeys"
               chips
+              deletable-chips
               label="Chips"
               multiple
               solo
@@ -128,10 +127,6 @@ export default class GithubExplorerComponent extends Vue {
 
     get repositoryNames(): string[] {
       return this.repositories.map((x) => x.full_name);
-    }
-
-    selectionClicked($event: MouseEvent) {
-      console.log('Selection clicked, ', $event, this);
     }
 
     @Watch('searchTerm')
